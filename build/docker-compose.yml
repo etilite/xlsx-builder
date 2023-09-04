@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  xlsx-builder:
+    build:
+      context: ./../
+      dockerfile: ./build/Dockerfile
+    container_name: xlsx-builder
+    ports:
+      - "8080:8080"
+    environment:
+      - HTTP_ADDR=:8080
