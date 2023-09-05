@@ -26,7 +26,6 @@ func TestRows(t *testing.T) {
 		},
 		{
 			name: "2x2 table",
-			//invoice: Invoice{rows: [][]string{{date: "01.01.2023", voucherNumber: "1"}, {date: "01.01.2023", voucherNumber: "2"}}},
 			invoice: &Invoice{
 				Id:     "123",
 				Date:   "18.07.2023",

@@ -15,7 +15,6 @@ func NewBuilder() *Builder {
 }
 
 func (b *Builder) Build(s interfaces.Sheet) (*bytes.Buffer, error) {
-	//time.Sleep(10 * time.Second)
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {

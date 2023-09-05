@@ -5,7 +5,6 @@ import (
 )
 
 type Invoice struct {
-	//почему json structure необходимо экспортировать поля?
 	Id     string     `json:"id"`
 	Date   string     `json:"date"`
 	Amount string     `json:"amount"`

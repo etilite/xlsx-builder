@@ -17,38 +17,6 @@ func NewXlsxHandler(b interfaces.Builder) *XlsxHandler {
 	return &XlsxHandler{builder: b}
 }
 
-//func (h *XlsxHandler) buildInvoice() http.HandlerFunc {
-//	return func(w http.ResponseWriter, r *http.Request) {
-//		sheet := &invoice.Invoice{}
-//		//h.factory = factory{}
-//		//sheet := h.factory.NewSheet()
-//		//fmt.Printf("sheet: %T, &sheet: %T\n", sheet, &sheet)
-//		err := json.NewDecoder(r.Body).Decode(sheet)
-//		//fmt.Printf("sheet: %v, &sheet: %v\n", sheet, &sheet)
-//		if err != nil {
-//			err = fmt.Errorf("failed to decode JSON: %w", err)
-//			log.Print(err)
-//			http.Error(w, err.Error(), http.StatusBadRequest)
-//			return
-//		}
-//
-//		buf, err := h.builder.Build(sheet)
-//		if err != nil {
-//			log.Print(err)
-//			http.Error(w, err.Error(), http.StatusInternalServerError)
-//			return
-//		}
-//
-//		h.setHeaders(w, int64(buf.Len()))
-//		_, err = buf.WriteTo(w)
-//		if err != nil {
-//			log.Print(err)
-//			http.Error(w, err.Error(), http.StatusInternalServerError)
-//			return
-//		}
-//	}
-//}
-
 func (h *XlsxHandler) handleSheet(newSheet func() interfaces.Sheet) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sheet := newSheet()
@@ -78,36 +46,6 @@ func (h *XlsxHandler) handleSheet(newSheet func() interfaces.Sheet) http.Handler
 		}
 	}
 }
-
-//func (h *XlsxHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-//	// следует ли инжектить sheet или иным образом ее передавать сюда, чтобы можно было с любыми моделями таблицы
-//	// работать, например, на других роутах?
-//	sheet := &invoice.Invoice{}
-//	//h.factory = factory{}
-//	//sheet := h.factory.NewSheet()
-//	err := json.NewDecoder(r.Body).Decode(sheet)
-//	if err != nil {
-//		err = fmt.Errorf("failed to decode JSON: %w", err)
-//		log.Print(err)
-//		http.Error(w, err.Error(), http.StatusBadRequest)
-//		return
-//	}
-//
-//	buf, err := h.builder.Build(sheet)
-//	if err != nil {
-//		log.Print(err)
-//		http.Error(w, err.Error(), http.StatusInternalServerError)
-//		return
-//	}
-//
-//	h.setHeaders(w, int64(buf.Len()))
-//	_, err = buf.WriteTo(w)
-//	if err != nil {
-//		log.Print(err)
-//		http.Error(w, err.Error(), http.StatusInternalServerError)
-//		return
-//	}
-//}
 
 func (h *XlsxHandler) setHeaders(w http.ResponseWriter, length int64) {
 	w.Header().Set("Content-Type", "application/octet-stream")

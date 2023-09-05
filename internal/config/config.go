@@ -7,7 +7,6 @@ type Config struct {
 }
 
 func Read() Config {
-	//var config Config
 	config := Config{
 		HTTPAddr: ":8888",
 	}
