@@ -50,7 +50,7 @@ func (h *XlsxHandler) handleSheet(newSheet func() interfaces.Sheet) http.Handler
 func (h *XlsxHandler) setHeaders(w http.ResponseWriter, length int64) {
 	w.Header().Set("Content-Type", "application/octet-stream")
 	//w.Header().Set("Data-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	w.Header().Set("Content-Disposition", "attachment; filename=invoice.xlsx")
+	w.Header().Set("Content-Disposition", "attachment; filename=sheet.xlsx")
 	w.Header().Set("Content-Transfer-Encoding", "binary")
 	w.Header().Set("Expires", "0")
 	w.Header().Set("Content-Length", strconv.FormatInt(length, 10))
