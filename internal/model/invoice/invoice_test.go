@@ -3,19 +3,18 @@ package invoice
 import (
 	"reflect"
 	"testing"
-	"xlsx-builder/interfaces"
 )
 
 func TestRows(t *testing.T) {
 	type test struct {
 		name    string
-		invoice interfaces.Sheet
+		invoice *Invoice
 		rows    [][]string
 	}
 	tests := []test{
 		{
 			name:    "empty table from factory",
-			invoice: Factory()(),
+			invoice: New(),
 			rows: [][]string{
 				{"Список туристов по счету №", "", "Дата", ""},
 				{"Заказчик:", "", ""},

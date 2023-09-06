@@ -3,6 +3,7 @@ package http
 import (
 	"net/http"
 	"xlsx-builder/builder"
+	"xlsx-builder/interfaces"
 	"xlsx-builder/internal/model/invoice"
 )
 
@@ -11,7 +12,12 @@ func NewRouter() *http.ServeMux {
 	xh := NewXlsxHandler(b)
 
 	mux := http.NewServeMux()
-	mux.Handle("/invoice/", xh.handleSheet(invoice.Factory()))
+
+	f := func() interfaces.Sheet {
+		return invoice.New()
+	}
+
+	mux.Handle("/invoice/", xh.handleSheet(f))
 
 	return mux
 }

@@ -88,7 +88,7 @@ func TestCreateInvoiceXlsx(t *testing.T) {
 }
 
 func assertHeaders(t *testing.T, response *httptest.ResponseRecorder) {
-	AssertHeader(t, response, "Content-Disposition", "attachment; filename=invoice.xlsx")
+	AssertHeader(t, response, "Content-Disposition", "attachment; filename=sheet.xlsx")
 	AssertHeader(t, response, "Content-Type", "application/octet-stream")
 	//AssertHeader(t, response, "Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	AssertHeader(t, response, "Content-Transfer-Encoding", "binary")

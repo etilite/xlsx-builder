@@ -3,16 +3,15 @@ package table
 import (
 	"reflect"
 	"testing"
-	"xlsx-builder/interfaces"
 )
 
 func TestRows(t *testing.T) {
 	tests := map[string]struct {
-		table interfaces.Sheet
+		table *Table
 		rows  [][]string
 	}{
 		"empty table from factory": {
-			table: Factory()(),
+			table: New(),
 			rows:  [][]string{nil},
 		},
 		"only header": {

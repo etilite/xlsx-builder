@@ -1,9 +1,5 @@
 package invoice
 
-import (
-	"xlsx-builder/interfaces"
-)
-
 type Invoice struct {
 	Id     string     `json:"id"`
 	Date   string     `json:"date"`
@@ -19,10 +15,8 @@ type Client struct {
 	Email     string `json:"email"`
 }
 
-func Factory() func() interfaces.Sheet {
-	return func() interfaces.Sheet {
-		return &Invoice{}
-	}
+func New() *Invoice {
+	return &Invoice{}
 }
 
 func (i *Invoice) Rows() [][]string {
