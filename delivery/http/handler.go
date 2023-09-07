@@ -6,18 +6,17 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"xlsx-builder/interfaces"
 )
 
 type XlsxHandler struct {
-	builder interfaces.Builder
+	builder Builder
 }
 
-func NewXlsxHandler(b interfaces.Builder) *XlsxHandler {
+func NewXlsxHandler(b Builder) *XlsxHandler {
 	return &XlsxHandler{builder: b}
 }
 
-func (h *XlsxHandler) handleSheet(newSheet func() interfaces.Sheet) http.HandlerFunc {
+func (h *XlsxHandler) handleSheet(newSheet func() Sheet) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sheet := newSheet()
 		//fmt.Printf("sheet: %T, &sheet: %T\n", sheet, &sheet)
@@ -30,7 +29,7 @@ func (h *XlsxHandler) handleSheet(newSheet func() interfaces.Sheet) http.Handler
 			return
 		}
 
-		buf, err := h.builder.Build(sheet)
+		buf, err := h.builder.Build(sheet.Rows())
 		if err != nil {
 			log.Print(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)

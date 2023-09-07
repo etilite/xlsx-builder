@@ -1,4 +1,4 @@
-package interfaces
+package http
 
 type Sheet interface {
 	Rows() [][]string

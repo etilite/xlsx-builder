@@ -7,20 +7,12 @@ import (
 	"testing"
 )
 
-type mockSheet struct {
-	rows [][]string
-}
-
-func (s mockSheet) Rows() [][]string {
-	return s.rows
-}
-
 func TestBuild(t *testing.T) {
 	tests := map[string]struct {
-		sheet mockSheet
+		rows [][]string
 	}{
-		"empty table": {sheet: mockSheet{rows: [][]string{}}},
-		"2x2 table":   {sheet: mockSheet{rows: [][]string{{"a", "b"}, {"c", "d"}}}},
+		"empty table": {rows: [][]string{}},
+		"2x2 table":   {rows: [][]string{{"a", "b"}, {"c", "d"}}},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -29,7 +21,7 @@ func TestBuild(t *testing.T) {
 
 			b := NewBuilder()
 
-			buf, err := b.Build(tc.sheet)
+			buf, err := b.Build(tc.rows)
 			if err != nil {
 				t.Error(err)
 			}
@@ -44,8 +36,8 @@ func TestBuild(t *testing.T) {
 				t.Error("got error getting rows")
 			}
 
-			if !reflect.DeepEqual(rows, tc.sheet.Rows()) {
-				t.Errorf("result mismatch in test %s: want %s, got %s", name, tc.sheet.Rows(), rows)
+			if !reflect.DeepEqual(rows, tc.rows) {
+				t.Errorf("result mismatch in test %s: want %s, got %s", name, tc.rows, rows)
 			}
 		})
 	}

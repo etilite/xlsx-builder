@@ -2,10 +2,8 @@ package builder
 
 import (
 	"bytes"
-	"log"
-	"xlsx-builder/interfaces"
-
 	"github.com/xuri/excelize/v2"
+	"log"
 )
 
 type Builder struct{}
@@ -14,14 +12,14 @@ func NewBuilder() *Builder {
 	return &Builder{}
 }
 
-func (b *Builder) Build(s interfaces.Sheet) (*bytes.Buffer, error) {
+func (b *Builder) Build(rows [][]string) (*bytes.Buffer, error) {
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {
 			log.Print(err)
 		}
 	}()
-	err := fillRows(s, f)
+	err := fillRows(rows, f)
 	if err != nil {
 		return nil, err
 	}
@@ -34,8 +32,8 @@ func (b *Builder) Build(s interfaces.Sheet) (*bytes.Buffer, error) {
 	return buf, nil
 }
 
-func fillRows(s interfaces.Sheet, f *excelize.File) error {
-	for i, r := range s.Rows() {
+func fillRows(rows [][]string, f *excelize.File) error {
+	for i, r := range rows {
 		cell, err := excelize.CoordinatesToCellName(1, i+1)
 		if err != nil {
 			return err

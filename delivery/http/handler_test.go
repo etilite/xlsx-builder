@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"xlsx-builder/interfaces"
 	. "xlsx-builder/internal/testing"
 )
 
@@ -16,7 +15,7 @@ type mockBuilder struct {
 	err error
 }
 
-func (b *mockBuilder) Build(interfaces.Sheet) (*bytes.Buffer, error) {
+func (b *mockBuilder) Build([][]string) (*bytes.Buffer, error) {
 	return b.buf, b.err
 }
 
@@ -29,7 +28,7 @@ func (s mockSheet) Rows() [][]string {
 }
 
 func TestCreateInvoiceXlsx(t *testing.T) {
-	mockFactory := func() interfaces.Sheet {
+	mockFactory := func() Sheet {
 		return &mockSheet{}
 	}
 	t.Run("success", func(t *testing.T) {
