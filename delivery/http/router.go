@@ -5,6 +5,7 @@ import (
 
 	"github.com/etilite/xlsx-builder/builder"
 	"github.com/etilite/xlsx-builder/internal/model/invoice"
+	"github.com/etilite/xlsx-builder/internal/model/table"
 )
 
 func NewRouter() *http.ServeMux {
@@ -13,11 +14,15 @@ func NewRouter() *http.ServeMux {
 
 	mux := http.NewServeMux()
 
-	f := func() Sheet {
+	invoiceFactory := func() Sheet {
 		return invoice.New()
 	}
+	mux.Handle("/invoice/", xh.handleSheet(invoiceFactory))
 
-	mux.Handle("/invoice/", xh.handleSheet(f))
+	tableFactory := func() Sheet {
+		return table.New()
+	}
+	mux.Handle("/table/", xh.handleSheet(tableFactory))
 
 	return mux
 }
