@@ -9,13 +9,13 @@ import (
 )
 
 func TestBuild(t *testing.T) {
-	tests := map[string]struct {
+	cases := map[string]struct {
 		rows [][]string
 	}{
 		"empty table": {rows: [][]string{}},
 		"2x2 table":   {rows: [][]string{{"a", "b"}, {"c", "d"}}},
 	}
-	for name, tc := range tests {
+	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			tc := tc
 			t.Parallel()

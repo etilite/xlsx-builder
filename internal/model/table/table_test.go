@@ -6,7 +6,7 @@ import (
 )
 
 func TestRows(t *testing.T) {
-	tests := map[string]struct {
+	cases := map[string]struct {
 		table *Table
 		rows  [][]string
 	}{
@@ -34,7 +34,7 @@ func TestRows(t *testing.T) {
 			},
 		},
 	}
-	for name, tc := range tests {
+	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			tc := tc
 			t.Parallel()

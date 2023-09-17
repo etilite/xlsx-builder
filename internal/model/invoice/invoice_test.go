@@ -6,14 +6,11 @@ import (
 )
 
 func TestRows(t *testing.T) {
-	type test struct {
-		name    string
+	cases := map[string]struct {
 		invoice *Invoice
 		rows    [][]string
-	}
-	tests := []test{
-		{
-			name:    "empty table from factory",
+	}{
+		"empty table from factory": {
 			invoice: New(),
 			rows: [][]string{
 				{"Список туристов по счету №", "", "Дата", ""},
@@ -23,8 +20,7 @@ func TestRows(t *testing.T) {
 				{"Сумма:", "", "", "", ""},
 			},
 		},
-		{
-			name: "2x2 table",
+		"2x2 table": {
 			invoice: &Invoice{
 				Id:     "123",
 				Date:   "18.07.2023",
@@ -48,8 +44,8 @@ func TestRows(t *testing.T) {
 			},
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
 			tc := tc
 			t.Parallel()
 
