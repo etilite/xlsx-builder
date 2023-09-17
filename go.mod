@@ -1,4 +1,4 @@
-module xlsx-builder
+module github.com/etilite/xlsx-builder
 
 go 1.20
 

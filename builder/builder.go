@@ -2,8 +2,9 @@ package builder
 
 import (
 	"bytes"
-	"github.com/xuri/excelize/v2"
 	"log"
+
+	"github.com/xuri/excelize/v2"
 )
 
 type Builder struct{}

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"xlsx-builder/delivery/http"
-	"xlsx-builder/internal/config"
+	"github.com/etilite/xlsx-builder/delivery/http"
+	"github.com/etilite/xlsx-builder/internal/config"
 )
 
 func main() {

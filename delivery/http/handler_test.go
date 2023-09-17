@@ -7,7 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	. "xlsx-builder/internal/testing"
+
+	. "github.com/etilite/xlsx-builder/internal/testing"
 )
 
 type mockBuilder struct {

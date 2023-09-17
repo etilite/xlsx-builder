@@ -1,10 +1,11 @@
 package builder
 
 import (
-	"github.com/xuri/excelize/v2"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/xuri/excelize/v2"
 )
 
 func TestBuild(t *testing.T) {
