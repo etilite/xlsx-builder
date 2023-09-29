@@ -5,5 +5,5 @@ import (
 )
 
 type Builder interface {
-	Build(rows [][]string) (*bytes.Buffer, error)
+	Build(rows [][]any) (*bytes.Buffer, error)
 }
