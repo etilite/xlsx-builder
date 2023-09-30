@@ -7,7 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	. "xlsx-builder/internal/testing"
+
+	. "github.com/etilite/xlsx-builder/internal/testing"
 )
 
 type mockBuilder struct {
@@ -15,15 +16,15 @@ type mockBuilder struct {
 	err error
 }
 
-func (b *mockBuilder) Build([][]string) (*bytes.Buffer, error) {
+func (b *mockBuilder) Build([][]any) (*bytes.Buffer, error) {
 	return b.buf, b.err
 }
 
 type mockSheet struct {
-	rows [][]string
+	rows [][]any
 }
 
-func (s mockSheet) Rows() [][]string {
+func (s mockSheet) Rows() [][]any {
 	return s.rows
 }
 

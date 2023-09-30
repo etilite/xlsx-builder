@@ -6,35 +6,35 @@ import (
 )
 
 func TestRows(t *testing.T) {
-	tests := map[string]struct {
+	cases := map[string]struct {
 		table *Table
-		rows  [][]string
+		rows  [][]any
 	}{
 		"empty table from factory": {
 			table: New(),
-			rows:  [][]string{nil},
+			rows:  [][]any{nil},
 		},
 		"only header": {
 			table: &Table{
-				Header: []string{"col1", "col2", "col3", "col4"},
+				Header: []any{"col1", "col2", "col3", "col4"},
 			},
-			rows: [][]string{
+			rows: [][]any{
 				{"col1", "col2", "col3", "col4"},
 			},
 		},
 		"2x2 table": {
 			table: &Table{
-				Header: []string{"col1", "col2"},
-				Data:   [][]string{{"01.01.2023", "1"}, {"01.01.2023", "2"}},
+				Header: []any{"col1", "col2"},
+				Data:   [][]any{{"01.01.2023", 1}, {"01.01.2023", 2.1}},
 			},
-			rows: [][]string{
+			rows: [][]any{
 				{"col1", "col2"},
-				{"01.01.2023", "1"},
-				{"01.01.2023", "2"},
+				{"01.01.2023", 1},
+				{"01.01.2023", 2.1},
 			},
 		},
 	}
-	for name, tc := range tests {
+	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			tc := tc
 			t.Parallel()

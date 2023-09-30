@@ -1,4 +1,4 @@
-ARG GO_VERSION=1.20.2
+ARG GO_VERSION=1.21.1
 ARG DISTROLESS_IMAGE=gcr.io/distroless/static:nonroot
 ############################
 # STEP 1 build executable binary
@@ -21,7 +21,7 @@ COPY . .
 # Build the static binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
       -ldflags='-w -s -extldflags "-static"' -a \
-      -o app .
+      -o app ./cmd/xlsx-builder
 
 ############################
 # STEP 2 build a small image

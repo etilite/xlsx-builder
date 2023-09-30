@@ -2,8 +2,9 @@ package builder
 
 import (
 	"bytes"
-	"github.com/xuri/excelize/v2"
 	"log"
+
+	"github.com/xuri/excelize/v2"
 )
 
 type Builder struct{}
@@ -12,7 +13,7 @@ func NewBuilder() *Builder {
 	return &Builder{}
 }
 
-func (b *Builder) Build(rows [][]string) (*bytes.Buffer, error) {
+func (b *Builder) Build(rows [][]any) (*bytes.Buffer, error) {
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {
@@ -32,7 +33,7 @@ func (b *Builder) Build(rows [][]string) (*bytes.Buffer, error) {
 	return buf, nil
 }
 
-func fillRows(rows [][]string, f *excelize.File) error {
+func fillRows(rows [][]any, f *excelize.File) error {
 	for i, r := range rows {
 		cell, err := excelize.CoordinatesToCellName(1, i+1)
 		if err != nil {

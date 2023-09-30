@@ -6,50 +6,46 @@ import (
 )
 
 func TestRows(t *testing.T) {
-	type test struct {
-		name    string
+	cases := map[string]struct {
 		invoice *Invoice
-		rows    [][]string
-	}
-	tests := []test{
-		{
-			name:    "empty table from factory",
+		rows    [][]any
+	}{
+		"empty table from factory": {
 			invoice: New(),
-			rows: [][]string{
+			rows: [][]any{
 				{"Список туристов по счету №", "", "Дата", ""},
 				{"Заказчик:", "", ""},
 				{"Контакты заказчика:", ""},
 				nil,
-				{"Сумма:", "", "", "", ""},
+				{"Сумма:", "", "", "", 0},
 			},
 		},
-		{
-			name: "2x2 table",
+		"2x2 table": {
 			invoice: &Invoice{
 				Id:     "123",
 				Date:   "18.07.2023",
-				Amount: "3",
+				Amount: 3,
 				Client: Client{
 					FullName:  "Ivanov Petr Petrovich",
 					AccountId: "RU001",
 					Email:     "some@mail.ru",
 				},
-				Header: []string{"Дата", "Кол-во"},
-				Data:   [][]string{{"01.01.2023", "1"}, {"01.01.2023", "2"}},
+				Header: []any{"Дата", "Кол-во"},
+				Data:   [][]any{{"01.01.2023", 1}, {"01.01.2023", 2}},
 			},
-			rows: [][]string{
+			rows: [][]any{
 				{"Список туристов по счету №", "123", "Дата", "18.07.2023"},
 				{"Заказчик:", "Ivanov Petr Petrovich", "RU001"},
 				{"Контакты заказчика:", "some@mail.ru"},
 				{"Дата", "Кол-во"},
-				{"01.01.2023", "1"},
-				{"01.01.2023", "2"},
-				{"Сумма:", "", "", "", "3"},
+				{"01.01.2023", 1},
+				{"01.01.2023", 2},
+				{"Сумма:", "", "", "", 3},
 			},
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
 			tc := tc
 			t.Parallel()
 
