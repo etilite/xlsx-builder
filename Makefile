@@ -7,7 +7,7 @@ dev-down:
 	docker-compose --file ./build/docker-compose.yml down --rmi all -v
 
 run:
-	CGO_ENABLED=0 go build -ldflags='-w -s' -o app ./main.go && HTTP_ADDR=:8080 ./app
+	CGO_ENABLED=0 go build -ldflags='-w -s' -o app ./cmd/xlsx-builder/main.go && HTTP_ADDR=:8080 ./app
 
 test:
 	go test -v -shuffle=on -count=2 -short -cover ./...
