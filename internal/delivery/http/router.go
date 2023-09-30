@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/etilite/xlsx-builder/builder"
+	"github.com/etilite/xlsx-builder/internal/builder"
 	"github.com/etilite/xlsx-builder/internal/model/invoice"
 	"github.com/etilite/xlsx-builder/internal/model/table"
 )

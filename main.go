@@ -5,8 +5,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/etilite/xlsx-builder/delivery/http"
 	"github.com/etilite/xlsx-builder/internal/config"
+	"github.com/etilite/xlsx-builder/internal/delivery/http"
 )
 
 func main() {
