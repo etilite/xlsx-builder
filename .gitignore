@@ -1,2 +1,11 @@
-## dev
-/.idea/
+*.mem
+*.cpu
+*.test
+*.log
+*.out
+*.coverprofile
+cover.html
+coverage.txt
+*.pprof
+.idea/
+/bin/

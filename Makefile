@@ -1,19 +1,25 @@
-.PHONY: dev-up dev-down run test test-race clean
+LOCAL_BIN=./bin
 
+.PHONY: dev-up
 dev-up:
 	docker-compose --file ./build/docker-compose.yml up -d --build --remove-orphans
 
+.PHONY: dev-down
 dev-down:
 	docker-compose --file ./build/docker-compose.yml down --rmi all -v
 
+.PHONY: run
 run:
-	CGO_ENABLED=0 go build -ldflags='-w -s' -o app ./cmd/xlsx-builder/main.go && HTTP_ADDR=:8080 ./app
+	CGO_ENABLED=0 go build -ldflags='-w -s' -o $(LOCAL_BIN)/app ./cmd/xlsx-builder/main.go && HTTP_ADDR=:8080 $(LOCAL_BIN)/app
 
+.PHONY: test
 test:
 	go test -v -shuffle=on -count=2 -short -cover ./...
 
+.PHONY: test-race
 test-race:
 	go test -race ./...
 
-clean:
-	rm app
+.PHONY: clean-bin
+clean-bin:
+	rm -fr $(LOCAL_BIN)
