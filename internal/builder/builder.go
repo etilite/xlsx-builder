@@ -1,48 +1,82 @@
 package builder
 
 import (
-	"bytes"
+	"io"
 	"log"
 
+	"github.com/etilite/xlsx-builder/internal/model"
 	"github.com/xuri/excelize/v2"
 )
 
-type Builder struct{}
+const sheetName = "Sheet1"
 
-func NewBuilder() *Builder {
-	return &Builder{}
+type decoder[T any] interface {
+	DecodeAndProcess(r io.Reader, process func(T) error) error
 }
 
-func (b *Builder) Build(rows [][]any) (*bytes.Buffer, error) {
+type processFn func(elem model.Row) error
+
+type Builder struct {
+	decoder   decoder[model.Row]
+	processor func(sw *excelize.StreamWriter) processFn
+}
+
+func NewBuilder() *Builder {
+	return &Builder{
+		decoder:   NewDecoder[model.Row](),
+		processor: processStreamWrite,
+	}
+}
+
+func (b *Builder) Build(r io.Reader, w io.Writer) error {
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {
 			log.Print(err)
 		}
 	}()
-	err := fillRows(rows, f)
-	if err != nil {
-		return nil, err
+
+	if err := b.streamWriteRows(r, f); err != nil {
+		return err
 	}
 
-	buf, err := f.WriteToBuffer()
-	if err != nil {
-		return nil, err
+	if err := f.Write(w); err != nil {
+		return err
 	}
 
-	return buf, nil
+	return nil
 }
 
-func fillRows(rows [][]any, f *excelize.File) error {
-	for i, r := range rows {
-		cell, err := excelize.CoordinatesToCellName(1, i+1)
-		if err != nil {
-			return err
-		}
-		err = f.SetSheetRow("Sheet1", cell, &r)
-		if err != nil {
-			return err
-		}
+func (b *Builder) streamWriteRows(r io.Reader, f *excelize.File) error {
+	sw, err := f.NewStreamWriter(sheetName)
+	if err != nil {
+		return err
 	}
+
+	if err = b.decoder.DecodeAndProcess(r, b.processor(sw)); err != nil {
+		return err
+	}
+
+	if err = sw.Flush(); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func processStreamWrite(sw *excelize.StreamWriter) processFn {
+	row := 1
+	return func(elem model.Row) error {
+		cell, err := excelize.CoordinatesToCellName(1, row)
+		if err != nil {
+			return err
+		}
+
+		if err = sw.SetRow(cell, elem.GetData()); err != nil {
+			return err
+		}
+		row++
+
+		return nil
+	}
 }

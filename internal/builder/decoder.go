@@ -21,16 +21,16 @@ func NewDecoder[T any]() *Decoder[T] {
 // so u should copy this slice for further processing.
 // returns an error wrapping ErrDecode when decoding is failed due to invalid input data.
 func (d *Decoder[T]) DecodeAndProcess(r io.Reader, process func(elem T) error) error {
-	decoder := json.NewDecoder(r)
+	jsonDecoder := json.NewDecoder(r)
 
-	if _, err := decoder.Token(); err != nil {
+	if _, err := jsonDecoder.Token(); err != nil {
 		return fmt.Errorf("%w: invalid opening token: %v", ErrDecode, err)
 	}
 
 	var in T
 
-	for decoder.More() {
-		if err := decoder.Decode(&in); err != nil {
+	for jsonDecoder.More() {
+		if err := jsonDecoder.Decode(&in); err != nil {
 			return fmt.Errorf("%w: %v", ErrDecode, err)
 		}
 		if err := process(in); err != nil {

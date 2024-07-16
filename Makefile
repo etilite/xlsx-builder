@@ -1,5 +1,13 @@
 LOCAL_BIN=./bin
 
+.PHONY: up
+up:
+	docker-compose --file ./build/docker-compose.yml up -d --remove-orphans
+
+.PHONY: down
+down:
+	docker-compose --file ./build/docker-compose.yml down
+
 .PHONY: dev-up
 dev-up:
 	docker-compose --file ./build/docker-compose.yml up -d --build --remove-orphans

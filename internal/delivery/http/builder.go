@@ -1,9 +1,9 @@
 package http
 
 import (
-	"bytes"
+	"io"
 )
 
 type Builder interface {
-	Build(rows [][]any) (*bytes.Buffer, error)
+	Build(r io.Reader, w io.Writer) error
 }
