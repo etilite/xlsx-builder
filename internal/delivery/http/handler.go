@@ -2,11 +2,16 @@ package http
 
 import (
 	"errors"
+	"io"
 	"log"
 	"net/http"
 
 	"github.com/etilite/xlsx-builder/internal/builder"
 )
+
+type Builder interface {
+	Build(r io.Reader, w io.Writer) error
+}
 
 type XlsxHandler struct {
 	builder Builder
