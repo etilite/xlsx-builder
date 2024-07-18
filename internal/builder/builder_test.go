@@ -42,6 +42,7 @@ func TestBuilder_Build(t *testing.T) {
 
 			// act
 			err := b.Build(r, w)
+			require.NoError(t, err)
 
 			f, err := excelize.OpenReader(w)
 			require.NoError(t, err)
