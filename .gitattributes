@@ -1,2 +1,2 @@
-go.sum -diff
-*_mock_test.go -diff
+go.sum -diff linguist-generated
+*_mock_test.go -diff linguist-generated
