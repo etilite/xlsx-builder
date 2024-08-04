@@ -32,7 +32,7 @@ The request body should be a JSON object with the following structure:
    {"data": [1, "a", 2.1]},
    {"data": [2, "some-cell-data", 2, "another-cell"]}
 ]
-``
+```
 
 **Request Example:**
 
