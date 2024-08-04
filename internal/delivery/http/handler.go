@@ -3,7 +3,7 @@ package http
 import (
 	"errors"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/etilite/xlsx-builder/internal/builder"
@@ -25,7 +25,7 @@ func (h *XlsxHandler) handlerFn() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.setHeaders(w)
 		if err := h.builder.Build(r.Body, w); err != nil {
-			log.Print(err)
+			slog.Error("handler: failed to build xlsx", "error", err)
 			http.Error(w, err.Error(), h.getErrorHTTPStatus(err))
 			return
 		}

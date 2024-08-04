@@ -2,7 +2,7 @@ package builder
 
 import (
 	"io"
-	"log"
+	"log/slog"
 
 	"github.com/etilite/xlsx-builder/internal/model"
 	"github.com/xuri/excelize/v2"
@@ -32,7 +32,7 @@ func (b *Builder) Build(r io.Reader, w io.Writer) error {
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {
-			log.Print(err)
+			slog.Error("builder: failed to close file", "error", err)
 		}
 	}()
 

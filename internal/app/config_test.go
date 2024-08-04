@@ -7,10 +7,7 @@ import (
 )
 
 func TestNewConfigFromEnv(t *testing.T) {
-	//t.Parallel()
-
 	t.Run("default http address", func(t *testing.T) {
-		//t.Parallel()
 		cfg := NewConfigFromEnv()
 
 		assert.Equal(t, ":8080", cfg.HTTPAddr)
