@@ -5,6 +5,7 @@ package builder
 //go:generate minimock -i github.com/etilite/xlsx-builder/internal/builder.decoder -o zzz_decoder_mock_test.go -n DecoderMock -p builder
 
 import (
+	"context"
 	"io"
 	"sync"
 	mm_atomic "sync/atomic"
@@ -18,8 +19,8 @@ type DecoderMock[T any] struct {
 	t          minimock.Tester
 	finishOnce sync.Once
 
-	funcDecodeAndProcess          func(r io.Reader, process func(T) error) (err error)
-	inspectFuncDecodeAndProcess   func(r io.Reader, process func(T) error)
+	funcDecodeAndProcess          func(ctx context.Context, r io.Reader, process func(ctx context.Context, elem T) error) (err error)
+	inspectFuncDecodeAndProcess   func(ctx context.Context, r io.Reader, process func(ctx context.Context, elem T) error)
 	afterDecodeAndProcessCounter  uint64
 	beforeDecodeAndProcessCounter uint64
 	DecodeAndProcessMock          mDecoderMockDecodeAndProcess[T]
@@ -64,14 +65,16 @@ type DecoderMockDecodeAndProcessExpectation[T any] struct {
 
 // DecoderMockDecodeAndProcessParams contains parameters of the decoder.DecodeAndProcess
 type DecoderMockDecodeAndProcessParams[T any] struct {
+	ctx     context.Context
 	r       io.Reader
-	process func(T) error
+	process func(ctx context.Context, elem T) error
 }
 
 // DecoderMockDecodeAndProcessParamPtrs contains pointers to parameters of the decoder.DecodeAndProcess
 type DecoderMockDecodeAndProcessParamPtrs[T any] struct {
+	ctx     *context.Context
 	r       *io.Reader
-	process *func(T) error
+	process *func(ctx context.Context, elem T) error
 }
 
 // DecoderMockDecodeAndProcessResults contains results of the decoder.DecodeAndProcess
@@ -90,7 +93,7 @@ func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) Optional() *mDecoderM
 }
 
 // Expect sets up expected params for decoder.DecodeAndProcess
-func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) Expect(r io.Reader, process func(T) error) *mDecoderMockDecodeAndProcess[T] {
+func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) Expect(ctx context.Context, r io.Reader, process func(ctx context.Context, elem T) error) *mDecoderMockDecodeAndProcess[T] {
 	if mmDecodeAndProcess.mock.funcDecodeAndProcess != nil {
 		mmDecodeAndProcess.mock.t.Fatalf("DecoderMock.DecodeAndProcess mock is already set by Set")
 	}
@@ -103,7 +106,7 @@ func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) Expect(r io.Reader, p
 		mmDecodeAndProcess.mock.t.Fatalf("DecoderMock.DecodeAndProcess mock is already set by ExpectParams functions")
 	}
 
-	mmDecodeAndProcess.defaultExpectation.params = &DecoderMockDecodeAndProcessParams[T]{r, process}
+	mmDecodeAndProcess.defaultExpectation.params = &DecoderMockDecodeAndProcessParams[T]{ctx, r, process}
 	for _, e := range mmDecodeAndProcess.expectations {
 		if minimock.Equal(e.params, mmDecodeAndProcess.defaultExpectation.params) {
 			mmDecodeAndProcess.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmDecodeAndProcess.defaultExpectation.params)
@@ -113,8 +116,30 @@ func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) Expect(r io.Reader, p
 	return mmDecodeAndProcess
 }
 
-// ExpectRParam1 sets up expected param r for decoder.DecodeAndProcess
-func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) ExpectRParam1(r io.Reader) *mDecoderMockDecodeAndProcess[T] {
+// ExpectCtxParam1 sets up expected param ctx for decoder.DecodeAndProcess
+func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) ExpectCtxParam1(ctx context.Context) *mDecoderMockDecodeAndProcess[T] {
+	if mmDecodeAndProcess.mock.funcDecodeAndProcess != nil {
+		mmDecodeAndProcess.mock.t.Fatalf("DecoderMock.DecodeAndProcess mock is already set by Set")
+	}
+
+	if mmDecodeAndProcess.defaultExpectation == nil {
+		mmDecodeAndProcess.defaultExpectation = &DecoderMockDecodeAndProcessExpectation[T]{}
+	}
+
+	if mmDecodeAndProcess.defaultExpectation.params != nil {
+		mmDecodeAndProcess.mock.t.Fatalf("DecoderMock.DecodeAndProcess mock is already set by Expect")
+	}
+
+	if mmDecodeAndProcess.defaultExpectation.paramPtrs == nil {
+		mmDecodeAndProcess.defaultExpectation.paramPtrs = &DecoderMockDecodeAndProcessParamPtrs[T]{}
+	}
+	mmDecodeAndProcess.defaultExpectation.paramPtrs.ctx = &ctx
+
+	return mmDecodeAndProcess
+}
+
+// ExpectRParam2 sets up expected param r for decoder.DecodeAndProcess
+func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) ExpectRParam2(r io.Reader) *mDecoderMockDecodeAndProcess[T] {
 	if mmDecodeAndProcess.mock.funcDecodeAndProcess != nil {
 		mmDecodeAndProcess.mock.t.Fatalf("DecoderMock.DecodeAndProcess mock is already set by Set")
 	}
@@ -135,8 +160,8 @@ func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) ExpectRParam1(r io.Re
 	return mmDecodeAndProcess
 }
 
-// ExpectProcessParam2 sets up expected param process for decoder.DecodeAndProcess
-func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) ExpectProcessParam2(process func(T) error) *mDecoderMockDecodeAndProcess[T] {
+// ExpectProcessParam3 sets up expected param process for decoder.DecodeAndProcess
+func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) ExpectProcessParam3(process func(ctx context.Context, elem T) error) *mDecoderMockDecodeAndProcess[T] {
 	if mmDecodeAndProcess.mock.funcDecodeAndProcess != nil {
 		mmDecodeAndProcess.mock.t.Fatalf("DecoderMock.DecodeAndProcess mock is already set by Set")
 	}
@@ -158,7 +183,7 @@ func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) ExpectProcessParam2(p
 }
 
 // Inspect accepts an inspector function that has same arguments as the decoder.DecodeAndProcess
-func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) Inspect(f func(r io.Reader, process func(T) error)) *mDecoderMockDecodeAndProcess[T] {
+func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) Inspect(f func(ctx context.Context, r io.Reader, process func(ctx context.Context, elem T) error)) *mDecoderMockDecodeAndProcess[T] {
 	if mmDecodeAndProcess.mock.inspectFuncDecodeAndProcess != nil {
 		mmDecodeAndProcess.mock.t.Fatalf("Inspect function is already set for DecoderMock.DecodeAndProcess")
 	}
@@ -182,7 +207,7 @@ func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) Return(err error) *De
 }
 
 // Set uses given function f to mock the decoder.DecodeAndProcess method
-func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) Set(f func(r io.Reader, process func(T) error) (err error)) *DecoderMock[T] {
+func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) Set(f func(ctx context.Context, r io.Reader, process func(ctx context.Context, elem T) error) (err error)) *DecoderMock[T] {
 	if mmDecodeAndProcess.defaultExpectation != nil {
 		mmDecodeAndProcess.mock.t.Fatalf("Default expectation is already set for the decoder.DecodeAndProcess method")
 	}
@@ -197,14 +222,14 @@ func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) Set(f func(r io.Reade
 
 // When sets expectation for the decoder.DecodeAndProcess which will trigger the result defined by the following
 // Then helper
-func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) When(r io.Reader, process func(T) error) *DecoderMockDecodeAndProcessExpectation[T] {
+func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) When(ctx context.Context, r io.Reader, process func(ctx context.Context, elem T) error) *DecoderMockDecodeAndProcessExpectation[T] {
 	if mmDecodeAndProcess.mock.funcDecodeAndProcess != nil {
 		mmDecodeAndProcess.mock.t.Fatalf("DecoderMock.DecodeAndProcess mock is already set by Set")
 	}
 
 	expectation := &DecoderMockDecodeAndProcessExpectation[T]{
 		mock:   mmDecodeAndProcess.mock,
-		params: &DecoderMockDecodeAndProcessParams[T]{r, process},
+		params: &DecoderMockDecodeAndProcessParams[T]{ctx, r, process},
 	}
 	mmDecodeAndProcess.expectations = append(mmDecodeAndProcess.expectations, expectation)
 	return expectation
@@ -237,15 +262,15 @@ func (mmDecodeAndProcess *mDecoderMockDecodeAndProcess[T]) invocationsDone() boo
 }
 
 // DecodeAndProcess implements decoder
-func (mmDecodeAndProcess *DecoderMock[T]) DecodeAndProcess(r io.Reader, process func(T) error) (err error) {
+func (mmDecodeAndProcess *DecoderMock[T]) DecodeAndProcess(ctx context.Context, r io.Reader, process func(ctx context.Context, elem T) error) (err error) {
 	mm_atomic.AddUint64(&mmDecodeAndProcess.beforeDecodeAndProcessCounter, 1)
 	defer mm_atomic.AddUint64(&mmDecodeAndProcess.afterDecodeAndProcessCounter, 1)
 
 	if mmDecodeAndProcess.inspectFuncDecodeAndProcess != nil {
-		mmDecodeAndProcess.inspectFuncDecodeAndProcess(r, process)
+		mmDecodeAndProcess.inspectFuncDecodeAndProcess(ctx, r, process)
 	}
 
-	mm_params := DecoderMockDecodeAndProcessParams[T]{r, process}
+	mm_params := DecoderMockDecodeAndProcessParams[T]{ctx, r, process}
 
 	// Record call args
 	mmDecodeAndProcess.DecodeAndProcessMock.mutex.Lock()
@@ -264,9 +289,13 @@ func (mmDecodeAndProcess *DecoderMock[T]) DecodeAndProcess(r io.Reader, process 
 		mm_want := mmDecodeAndProcess.DecodeAndProcessMock.defaultExpectation.params
 		mm_want_ptrs := mmDecodeAndProcess.DecodeAndProcessMock.defaultExpectation.paramPtrs
 
-		mm_got := DecoderMockDecodeAndProcessParams[T]{r, process}
+		mm_got := DecoderMockDecodeAndProcessParams[T]{ctx, r, process}
 
 		if mm_want_ptrs != nil {
+
+			if mm_want_ptrs.ctx != nil && !minimock.Equal(*mm_want_ptrs.ctx, mm_got.ctx) {
+				mmDecodeAndProcess.t.Errorf("DecoderMock.DecodeAndProcess got unexpected parameter ctx, want: %#v, got: %#v%s\n", *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
+			}
 
 			if mm_want_ptrs.r != nil && !minimock.Equal(*mm_want_ptrs.r, mm_got.r) {
 				mmDecodeAndProcess.t.Errorf("DecoderMock.DecodeAndProcess got unexpected parameter r, want: %#v, got: %#v%s\n", *mm_want_ptrs.r, mm_got.r, minimock.Diff(*mm_want_ptrs.r, mm_got.r))
@@ -287,9 +316,9 @@ func (mmDecodeAndProcess *DecoderMock[T]) DecodeAndProcess(r io.Reader, process 
 		return (*mm_results).err
 	}
 	if mmDecodeAndProcess.funcDecodeAndProcess != nil {
-		return mmDecodeAndProcess.funcDecodeAndProcess(r, process)
+		return mmDecodeAndProcess.funcDecodeAndProcess(ctx, r, process)
 	}
-	mmDecodeAndProcess.t.Fatalf("Unexpected call to DecoderMock.DecodeAndProcess. %v %v", r, process)
+	mmDecodeAndProcess.t.Fatalf("Unexpected call to DecoderMock.DecodeAndProcess. %v %v %v", ctx, r, process)
 	return
 }
 

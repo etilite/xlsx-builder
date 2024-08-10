@@ -1,10 +1,12 @@
 package builder
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 )
 
 // ErrDecode is type of error returned when decoding fails.
@@ -20,7 +22,7 @@ func NewDecoder[T any]() *Decoder[T] {
 // If [T] has any slice fields underneath arrays will be overwritten with each iteration
 // so u should copy this slice for further processing.
 // returns an error wrapping ErrDecode when decoding is failed due to invalid input data.
-func (d *Decoder[T]) DecodeAndProcess(r io.Reader, process func(elem T) error) error {
+func (d *Decoder[T]) DecodeAndProcess(ctx context.Context, r io.Reader, process func(ctx context.Context, elem T) error) error {
 	jsonDecoder := json.NewDecoder(r)
 
 	if _, err := jsonDecoder.Token(); err != nil {
@@ -28,12 +30,18 @@ func (d *Decoder[T]) DecodeAndProcess(r io.Reader, process func(elem T) error) e
 	}
 
 	var in T
-
+	slog.Info("decoder: cycle")
 	for jsonDecoder.More() {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		if err := jsonDecoder.Decode(&in); err != nil {
 			return fmt.Errorf("%w: %v", ErrDecode, err)
 		}
-		if err := process(in); err != nil {
+		if err := process(ctx, in); err != nil {
 			return fmt.Errorf("err process elem %v: %w", in, err)
 		}
 	}

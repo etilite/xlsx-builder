@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"errors"
 	"io"
 	"log/slog"
@@ -10,7 +11,7 @@ import (
 )
 
 type Builder interface {
-	Build(r io.Reader, w io.Writer) error
+	Build(ctx context.Context, r io.Reader, w io.Writer) error
 }
 
 type XlsxHandler struct {
@@ -24,8 +25,11 @@ func NewXlsxHandler(b Builder) *XlsxHandler {
 func (h *XlsxHandler) handlerFn() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.setHeaders(w)
-		if err := h.builder.Build(r.Body, w); err != nil {
+		if err := h.builder.Build(r.Context(), r.Body, w); err != nil {
 			slog.Error("handler: failed to build xlsx", "error", err)
+			// if w.Write() is called, there will be error msg in log
+			// starting with "http: superfluous response.WriteHeader call..."
+			// this happens cause w.Write() sets http.StatusOK
 			http.Error(w, err.Error(), h.getErrorHTTPStatus(err))
 			return
 		}

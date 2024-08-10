@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"context"
 	"io"
 	"log/slog"
 
@@ -11,14 +12,14 @@ import (
 const sheetName = "Sheet1"
 
 type decoder[T any] interface {
-	DecodeAndProcess(r io.Reader, process func(T) error) error
+	DecodeAndProcess(ctx context.Context, r io.Reader, process func(ctx context.Context, elem T) error) error
 }
 
-type processFn func(elem model.Row) error
+type processFn[T any] func(ctx context.Context, elem T) error
 
 type Builder struct {
 	decoder   decoder[model.Row]
-	processor func(sw *excelize.StreamWriter) processFn
+	processor func(sw *excelize.StreamWriter) processFn[model.Row]
 }
 
 func NewBuilder() *Builder {
@@ -28,7 +29,7 @@ func NewBuilder() *Builder {
 	}
 }
 
-func (b *Builder) Build(r io.Reader, w io.Writer) error {
+func (b *Builder) Build(ctx context.Context, r io.Reader, w io.Writer) error {
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {
@@ -36,7 +37,7 @@ func (b *Builder) Build(r io.Reader, w io.Writer) error {
 		}
 	}()
 
-	if err := b.streamWriteRows(r, f); err != nil {
+	if err := b.streamWriteRows(ctx, r, f); err != nil {
 		return err
 	}
 
@@ -47,13 +48,13 @@ func (b *Builder) Build(r io.Reader, w io.Writer) error {
 	return nil
 }
 
-func (b *Builder) streamWriteRows(r io.Reader, f *excelize.File) error {
+func (b *Builder) streamWriteRows(ctx context.Context, r io.Reader, f *excelize.File) error {
 	sw, err := f.NewStreamWriter(sheetName)
 	if err != nil {
 		return err
 	}
 
-	if err = b.decoder.DecodeAndProcess(r, b.processor(sw)); err != nil {
+	if err = b.decoder.DecodeAndProcess(ctx, r, b.processor(sw)); err != nil {
 		return err
 	}
 
@@ -64,9 +65,9 @@ func (b *Builder) streamWriteRows(r io.Reader, f *excelize.File) error {
 	return nil
 }
 
-func processStreamWrite(sw *excelize.StreamWriter) processFn {
+func processStreamWrite(sw *excelize.StreamWriter) processFn[model.Row] {
 	row := 1
-	return func(elem model.Row) error {
+	return func(_ context.Context, elem model.Row) error {
 		cell, err := excelize.CoordinatesToCellName(1, row)
 		if err != nil {
 			return err

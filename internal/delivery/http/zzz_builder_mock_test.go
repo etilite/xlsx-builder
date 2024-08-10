@@ -5,6 +5,7 @@ package http
 //go:generate minimock -i github.com/etilite/xlsx-builder/internal/delivery/http.Builder -o zzz_builder_mock_test.go -n BuilderMock -p http
 
 import (
+	"context"
 	"io"
 	"sync"
 	mm_atomic "sync/atomic"
@@ -18,8 +19,8 @@ type BuilderMock struct {
 	t          minimock.Tester
 	finishOnce sync.Once
 
-	funcBuild          func(r io.Reader, w io.Writer) (err error)
-	inspectFuncBuild   func(r io.Reader, w io.Writer)
+	funcBuild          func(ctx context.Context, r io.Reader, w io.Writer) (err error)
+	inspectFuncBuild   func(ctx context.Context, r io.Reader, w io.Writer)
 	afterBuildCounter  uint64
 	beforeBuildCounter uint64
 	BuildMock          mBuilderMockBuild
@@ -64,14 +65,16 @@ type BuilderMockBuildExpectation struct {
 
 // BuilderMockBuildParams contains parameters of the Builder.Build
 type BuilderMockBuildParams struct {
-	r io.Reader
-	w io.Writer
+	ctx context.Context
+	r   io.Reader
+	w   io.Writer
 }
 
 // BuilderMockBuildParamPtrs contains pointers to parameters of the Builder.Build
 type BuilderMockBuildParamPtrs struct {
-	r *io.Reader
-	w *io.Writer
+	ctx *context.Context
+	r   *io.Reader
+	w   *io.Writer
 }
 
 // BuilderMockBuildResults contains results of the Builder.Build
@@ -90,7 +93,7 @@ func (mmBuild *mBuilderMockBuild) Optional() *mBuilderMockBuild {
 }
 
 // Expect sets up expected params for Builder.Build
-func (mmBuild *mBuilderMockBuild) Expect(r io.Reader, w io.Writer) *mBuilderMockBuild {
+func (mmBuild *mBuilderMockBuild) Expect(ctx context.Context, r io.Reader, w io.Writer) *mBuilderMockBuild {
 	if mmBuild.mock.funcBuild != nil {
 		mmBuild.mock.t.Fatalf("BuilderMock.Build mock is already set by Set")
 	}
@@ -103,7 +106,7 @@ func (mmBuild *mBuilderMockBuild) Expect(r io.Reader, w io.Writer) *mBuilderMock
 		mmBuild.mock.t.Fatalf("BuilderMock.Build mock is already set by ExpectParams functions")
 	}
 
-	mmBuild.defaultExpectation.params = &BuilderMockBuildParams{r, w}
+	mmBuild.defaultExpectation.params = &BuilderMockBuildParams{ctx, r, w}
 	for _, e := range mmBuild.expectations {
 		if minimock.Equal(e.params, mmBuild.defaultExpectation.params) {
 			mmBuild.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmBuild.defaultExpectation.params)
@@ -113,8 +116,30 @@ func (mmBuild *mBuilderMockBuild) Expect(r io.Reader, w io.Writer) *mBuilderMock
 	return mmBuild
 }
 
-// ExpectRParam1 sets up expected param r for Builder.Build
-func (mmBuild *mBuilderMockBuild) ExpectRParam1(r io.Reader) *mBuilderMockBuild {
+// ExpectCtxParam1 sets up expected param ctx for Builder.Build
+func (mmBuild *mBuilderMockBuild) ExpectCtxParam1(ctx context.Context) *mBuilderMockBuild {
+	if mmBuild.mock.funcBuild != nil {
+		mmBuild.mock.t.Fatalf("BuilderMock.Build mock is already set by Set")
+	}
+
+	if mmBuild.defaultExpectation == nil {
+		mmBuild.defaultExpectation = &BuilderMockBuildExpectation{}
+	}
+
+	if mmBuild.defaultExpectation.params != nil {
+		mmBuild.mock.t.Fatalf("BuilderMock.Build mock is already set by Expect")
+	}
+
+	if mmBuild.defaultExpectation.paramPtrs == nil {
+		mmBuild.defaultExpectation.paramPtrs = &BuilderMockBuildParamPtrs{}
+	}
+	mmBuild.defaultExpectation.paramPtrs.ctx = &ctx
+
+	return mmBuild
+}
+
+// ExpectRParam2 sets up expected param r for Builder.Build
+func (mmBuild *mBuilderMockBuild) ExpectRParam2(r io.Reader) *mBuilderMockBuild {
 	if mmBuild.mock.funcBuild != nil {
 		mmBuild.mock.t.Fatalf("BuilderMock.Build mock is already set by Set")
 	}
@@ -135,8 +160,8 @@ func (mmBuild *mBuilderMockBuild) ExpectRParam1(r io.Reader) *mBuilderMockBuild 
 	return mmBuild
 }
 
-// ExpectWParam2 sets up expected param w for Builder.Build
-func (mmBuild *mBuilderMockBuild) ExpectWParam2(w io.Writer) *mBuilderMockBuild {
+// ExpectWParam3 sets up expected param w for Builder.Build
+func (mmBuild *mBuilderMockBuild) ExpectWParam3(w io.Writer) *mBuilderMockBuild {
 	if mmBuild.mock.funcBuild != nil {
 		mmBuild.mock.t.Fatalf("BuilderMock.Build mock is already set by Set")
 	}
@@ -158,7 +183,7 @@ func (mmBuild *mBuilderMockBuild) ExpectWParam2(w io.Writer) *mBuilderMockBuild 
 }
 
 // Inspect accepts an inspector function that has same arguments as the Builder.Build
-func (mmBuild *mBuilderMockBuild) Inspect(f func(r io.Reader, w io.Writer)) *mBuilderMockBuild {
+func (mmBuild *mBuilderMockBuild) Inspect(f func(ctx context.Context, r io.Reader, w io.Writer)) *mBuilderMockBuild {
 	if mmBuild.mock.inspectFuncBuild != nil {
 		mmBuild.mock.t.Fatalf("Inspect function is already set for BuilderMock.Build")
 	}
@@ -182,7 +207,7 @@ func (mmBuild *mBuilderMockBuild) Return(err error) *BuilderMock {
 }
 
 // Set uses given function f to mock the Builder.Build method
-func (mmBuild *mBuilderMockBuild) Set(f func(r io.Reader, w io.Writer) (err error)) *BuilderMock {
+func (mmBuild *mBuilderMockBuild) Set(f func(ctx context.Context, r io.Reader, w io.Writer) (err error)) *BuilderMock {
 	if mmBuild.defaultExpectation != nil {
 		mmBuild.mock.t.Fatalf("Default expectation is already set for the Builder.Build method")
 	}
@@ -197,14 +222,14 @@ func (mmBuild *mBuilderMockBuild) Set(f func(r io.Reader, w io.Writer) (err erro
 
 // When sets expectation for the Builder.Build which will trigger the result defined by the following
 // Then helper
-func (mmBuild *mBuilderMockBuild) When(r io.Reader, w io.Writer) *BuilderMockBuildExpectation {
+func (mmBuild *mBuilderMockBuild) When(ctx context.Context, r io.Reader, w io.Writer) *BuilderMockBuildExpectation {
 	if mmBuild.mock.funcBuild != nil {
 		mmBuild.mock.t.Fatalf("BuilderMock.Build mock is already set by Set")
 	}
 
 	expectation := &BuilderMockBuildExpectation{
 		mock:   mmBuild.mock,
-		params: &BuilderMockBuildParams{r, w},
+		params: &BuilderMockBuildParams{ctx, r, w},
 	}
 	mmBuild.expectations = append(mmBuild.expectations, expectation)
 	return expectation
@@ -237,15 +262,15 @@ func (mmBuild *mBuilderMockBuild) invocationsDone() bool {
 }
 
 // Build implements Builder
-func (mmBuild *BuilderMock) Build(r io.Reader, w io.Writer) (err error) {
+func (mmBuild *BuilderMock) Build(ctx context.Context, r io.Reader, w io.Writer) (err error) {
 	mm_atomic.AddUint64(&mmBuild.beforeBuildCounter, 1)
 	defer mm_atomic.AddUint64(&mmBuild.afterBuildCounter, 1)
 
 	if mmBuild.inspectFuncBuild != nil {
-		mmBuild.inspectFuncBuild(r, w)
+		mmBuild.inspectFuncBuild(ctx, r, w)
 	}
 
-	mm_params := BuilderMockBuildParams{r, w}
+	mm_params := BuilderMockBuildParams{ctx, r, w}
 
 	// Record call args
 	mmBuild.BuildMock.mutex.Lock()
@@ -264,9 +289,13 @@ func (mmBuild *BuilderMock) Build(r io.Reader, w io.Writer) (err error) {
 		mm_want := mmBuild.BuildMock.defaultExpectation.params
 		mm_want_ptrs := mmBuild.BuildMock.defaultExpectation.paramPtrs
 
-		mm_got := BuilderMockBuildParams{r, w}
+		mm_got := BuilderMockBuildParams{ctx, r, w}
 
 		if mm_want_ptrs != nil {
+
+			if mm_want_ptrs.ctx != nil && !minimock.Equal(*mm_want_ptrs.ctx, mm_got.ctx) {
+				mmBuild.t.Errorf("BuilderMock.Build got unexpected parameter ctx, want: %#v, got: %#v%s\n", *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
+			}
 
 			if mm_want_ptrs.r != nil && !minimock.Equal(*mm_want_ptrs.r, mm_got.r) {
 				mmBuild.t.Errorf("BuilderMock.Build got unexpected parameter r, want: %#v, got: %#v%s\n", *mm_want_ptrs.r, mm_got.r, minimock.Diff(*mm_want_ptrs.r, mm_got.r))
@@ -287,9 +316,9 @@ func (mmBuild *BuilderMock) Build(r io.Reader, w io.Writer) (err error) {
 		return (*mm_results).err
 	}
 	if mmBuild.funcBuild != nil {
-		return mmBuild.funcBuild(r, w)
+		return mmBuild.funcBuild(ctx, r, w)
 	}
-	mmBuild.t.Fatalf("Unexpected call to BuilderMock.Build. %v %v", r, w)
+	mmBuild.t.Fatalf("Unexpected call to BuilderMock.Build. %v %v %v", ctx, r, w)
 	return
 }
 

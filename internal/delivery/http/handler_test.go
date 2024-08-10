@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -23,7 +24,7 @@ func TestHandlerFn(t *testing.T) {
 
 		mc := minimock.NewController(t)
 		builderMock := NewBuilderMock(mc)
-		builderMock.BuildMock.Set(func(r io.Reader, w io.Writer) (err error) {
+		builderMock.BuildMock.Set(func(_ context.Context, r io.Reader, w io.Writer) (err error) {
 			buf := &bytes.Buffer{}
 			_, readErr := buf.ReadFrom(r)
 			if readErr != nil {
@@ -55,7 +56,7 @@ func TestHandlerFn(t *testing.T) {
 
 		mc := minimock.NewController(t)
 		builderMock := NewBuilderMock(mc)
-		builderMock.BuildMock.Set(func(r io.Reader, w io.Writer) (err error) {
+		builderMock.BuildMock.Set(func(_ context.Context, r io.Reader, w io.Writer) (err error) {
 			return builder.ErrDecode
 		})
 		server := NewXlsxHandler(builderMock)
@@ -69,7 +70,7 @@ func TestHandlerFn(t *testing.T) {
 
 		mc := minimock.NewController(t)
 		builderMock := NewBuilderMock(mc)
-		builderMock.BuildMock.Set(func(r io.Reader, w io.Writer) (err error) {
+		builderMock.BuildMock.Set(func(_ context.Context, r io.Reader, w io.Writer) (err error) {
 			return fmt.Errorf("some error")
 		})
 		server := NewXlsxHandler(builderMock)

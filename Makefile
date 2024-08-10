@@ -20,6 +20,10 @@ dev-down:
 run:
 	CGO_ENABLED=0 go build -ldflags='-w -s' -o $(LOCAL_BIN)/app ./cmd/xlsx-builder/main.go && HTTP_ADDR=:8080 $(LOCAL_BIN)/app
 
+.PHONY: lint
+lint:
+	golangci-lint run ./...
+
 .PHONY: test
 test:
 	go test -v -shuffle=on -count=2 -short -cover ./...

@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -16,7 +17,7 @@ func BenchmarkDecoder(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		d := NewDecoder[model.Row]()
-		err := d.DecodeAndProcess(strings.NewReader(body), func(elem model.Row) error {
+		err := d.DecodeAndProcess(context.Background(), strings.NewReader(body), func(_ context.Context, _ model.Row) error {
 			return nil
 		})
 		if err != nil {

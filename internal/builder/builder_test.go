@@ -2,6 +2,7 @@ package builder
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"strings"
@@ -35,13 +36,14 @@ func TestBuilder_Build(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
+			ctx := context.Background()
 			r := strings.NewReader(tc.body)
 			w := bytes.NewBuffer(nil)
 
 			b := NewBuilder()
 
 			// act
-			err := b.Build(r, w)
+			err := b.Build(ctx, r, w)
 			require.NoError(t, err)
 
 			f, err := excelize.OpenReader(w)
@@ -63,14 +65,15 @@ func TestBuilder_Build_errors(t *testing.T) {
 
 		mc := minimock.NewController(t)
 		decoderMock := NewDecoderMock[model.Row](mc)
-		decoderMock.DecodeAndProcessMock.Set(func(_ io.Reader, _ func(model.Row) error) (err error) {
+		decoderMock.DecodeAndProcessMock.Set(func(_ context.Context, _ io.Reader, _ func(ctx context.Context, elem model.Row) error) (err error) {
 			return fmt.Errorf("decoder error")
 		})
 
 		b := NewBuilder()
 		b.decoder = decoderMock
 
-		err := b.Build(nil, nil)
+		err := b.Build(context.Background(), nil, nil)
+
 		require.ErrorContains(t, err, "decoder error")
 	})
 
@@ -79,7 +82,7 @@ func TestBuilder_Build_errors(t *testing.T) {
 
 		mc := minimock.NewController(t)
 		decoderMock := NewDecoderMock[model.Row](mc)
-		decoderMock.DecodeAndProcessMock.Set(func(_ io.Reader, _ func(model.Row) error) (err error) {
+		decoderMock.DecodeAndProcessMock.Set(func(_ context.Context, _ io.Reader, _ func(ctx context.Context, elem model.Row) error) (err error) {
 			return nil
 		})
 
@@ -93,7 +96,8 @@ func TestBuilder_Build_errors(t *testing.T) {
 
 		r := strings.NewReader("")
 
-		err := b.Build(r, writerMock)
+		err := b.Build(context.Background(), r, writerMock)
+
 		require.ErrorContains(t, err, "write error")
 	})
 }
