@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 )
 
 // ErrDecode is type of error returned when decoding fails.
@@ -29,8 +28,11 @@ func (d *Decoder[T]) DecodeAndProcess(ctx context.Context, r io.Reader, process 
 		return fmt.Errorf("%w: invalid opening token: %v", ErrDecode, err)
 	}
 
+	// Initializing <in> outside for loop is faster (cause done only once) and makes fewer allocations,
+	// but it has side effects with zero values when some json-fields omitted or with slice copying.
+	// Aware about this behaviour or move it inside loop in these cases.
 	var in T
-	slog.Info("decoder: cycle")
+
 	for jsonDecoder.More() {
 		select {
 		case <-ctx.Done():
