@@ -1,4 +1,4 @@
-package config
+package app
 
 import "os"
 
@@ -6,13 +6,13 @@ type Config struct {
 	HTTPAddr string
 }
 
-func Read() Config {
+func NewConfigFromEnv() Config {
 	config := Config{
-		HTTPAddr: ":8888",
+		HTTPAddr: ":8080",
 	}
-	httpAddr, ok := os.LookupEnv("HTTP_ADDR")
-	if ok {
+	if httpAddr, ok := os.LookupEnv("HTTP_ADDR"); ok {
 		config.HTTPAddr = httpAddr
 	}
+
 	return config
 }

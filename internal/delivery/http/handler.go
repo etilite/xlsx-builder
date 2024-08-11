@@ -1,12 +1,18 @@
 package http
 
 import (
-	"encoding/json"
-	"fmt"
-	"log"
+	"context"
+	"errors"
+	"io"
+	"log/slog"
 	"net/http"
-	"strconv"
+
+	"github.com/etilite/xlsx-builder/internal/builder"
 )
+
+type Builder interface {
+	Build(ctx context.Context, r io.Reader, w io.Writer) error
+}
 
 type XlsxHandler struct {
 	builder Builder
@@ -16,41 +22,32 @@ func NewXlsxHandler(b Builder) *XlsxHandler {
 	return &XlsxHandler{builder: b}
 }
 
-func (h *XlsxHandler) handleSheet(newSheet func() Sheet) http.HandlerFunc {
+func (h *XlsxHandler) handlerFn() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		sheet := newSheet()
-		//fmt.Printf("sheet: %T, &sheet: %T\n", sheet, &sheet)
-		err := json.NewDecoder(r.Body).Decode(&sheet)
-		//fmt.Printf("sheet: %v, &sheet: %v\n", sheet, &sheet)
-		if err != nil {
-			err = fmt.Errorf("failed to decode JSON: %w", err)
-			log.Print(err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		buf, err := h.builder.Build(sheet.Rows())
-		if err != nil {
-			log.Print(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		h.setHeaders(w, int64(buf.Len()))
-		_, err = buf.WriteTo(w)
-		if err != nil {
-			log.Print(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		h.setHeaders(w)
+		if err := h.builder.Build(r.Context(), r.Body, w); err != nil {
+			slog.Error("handler: failed to build xlsx", "error", err)
+			// if w.Write() is called, there will be error msg in log
+			// starting with "http: superfluous response.WriteHeader call..."
+			// this happens cause w.Write() sets http.StatusOK
+			http.Error(w, err.Error(), h.getErrorHTTPStatus(err))
 			return
 		}
 	}
 }
 
-func (h *XlsxHandler) setHeaders(w http.ResponseWriter, length int64) {
+func (h *XlsxHandler) setHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/octet-stream")
-	//w.Header().Set("Data-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	w.Header().Set("Content-Disposition", "attachment; filename=sheet.xlsx")
 	w.Header().Set("Content-Transfer-Encoding", "binary")
 	w.Header().Set("Expires", "0")
-	w.Header().Set("Content-Length", strconv.FormatInt(length, 10))
+}
+
+func (h *XlsxHandler) getErrorHTTPStatus(err error) int {
+	switch true {
+	case errors.Is(err, builder.ErrDecode):
+		return http.StatusBadRequest
+	default:
+		return http.StatusInternalServerError
+	}
 }

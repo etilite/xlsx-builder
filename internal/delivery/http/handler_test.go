@@ -2,96 +2,93 @@ package http
 
 import (
 	"bytes"
-	"errors"
+	"context"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	. "github.com/etilite/xlsx-builder/internal/testing"
+	"github.com/etilite/xlsx-builder/internal/builder"
+	"github.com/gojuno/minimock/v3"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-type mockBuilder struct {
-	buf *bytes.Buffer
-	err error
-}
+func TestHandlerFn(t *testing.T) {
+	t.Parallel()
 
-func (b *mockBuilder) Build([][]any) (*bytes.Buffer, error) {
-	return b.buf, b.err
-}
-
-type mockSheet struct {
-	rows [][]any
-}
-
-func (s mockSheet) Rows() [][]any {
-	return s.rows
-}
-
-func TestCreateInvoiceXlsx(t *testing.T) {
-	mockFactory := func() Sheet {
-		return &mockSheet{}
-	}
 	t.Run("success", func(t *testing.T) {
 		t.Parallel()
 
-		buf := &bytes.Buffer{}
-		buf.Write([]byte("body-file-contents"))
-		builder := &mockBuilder{buf: buf}
-		server := NewXlsxHandler(builder)
-		handleFunc := server.handleSheet(mockFactory)
+		mc := minimock.NewController(t)
+		builderMock := NewBuilderMock(mc)
+		builderMock.BuildMock.Set(func(_ context.Context, r io.Reader, w io.Writer) (err error) {
+			buf := &bytes.Buffer{}
+			_, readErr := buf.ReadFrom(r)
+			if readErr != nil {
+				return readErr
+			}
+			_, writeErr := buf.WriteTo(w)
+			if writeErr != nil {
+				return writeErr
+			}
 
-		requestBody := strings.NewReader("{}")
-		request, _ := http.NewRequest(http.MethodPost, "/invoice/", requestBody)
+			return nil
+		})
+		server := NewXlsxHandler(builderMock)
+		requestBody := strings.NewReader("body-file-contents")
+		request, _ := http.NewRequest(http.MethodPost, "/v2", requestBody)
 		response := httptest.NewRecorder()
+		handleFunc := server.handlerFn()
 
 		handleFunc(response, request)
+		defer request.Body.Close()
 
-		AssertStatusCode(t, response, http.StatusOK)
-		AssertBody(t, response, "body-file-contents")
+		require.Equal(t, http.StatusOK, response.Code)
+		require.Equal(t, "body-file-contents", response.Body.String())
 		assertHeaders(t, response)
 	})
 
 	t.Run("bad request", func(t *testing.T) {
 		t.Parallel()
 
-		builder := &mockBuilder{}
-		server := NewXlsxHandler(builder)
-		handleFunc := server.handleSheet(mockFactory)
+		mc := minimock.NewController(t)
+		builderMock := NewBuilderMock(mc)
+		builderMock.BuildMock.Set(func(_ context.Context, r io.Reader, w io.Writer) (err error) {
+			return builder.ErrDecode
+		})
+		server := NewXlsxHandler(builderMock)
 
-		requestBody := strings.NewReader("")
-		request, _ := http.NewRequest(http.MethodPost, "/invoice/", requestBody)
-		response := httptest.NewRecorder()
-
-		handleFunc(response, request)
-
-		AssertStatusCode(t, response, http.StatusBadRequest)
-		AssertBody(t, response, "failed to decode JSON: EOF\n")
+		require.HTTPStatusCode(t, server.handlerFn(), http.MethodPost, "/v2", nil, http.StatusBadRequest)
+		require.HTTPBodyContains(t, server.handlerFn(), http.MethodPost, "/v2", nil, "decode failed")
 	})
 
 	t.Run("internal server error", func(t *testing.T) {
 		t.Parallel()
 
-		builder := &mockBuilder{err: errors.New("internal server error")}
-		server := NewXlsxHandler(builder)
-		handleFunc := server.handleSheet(mockFactory)
+		mc := minimock.NewController(t)
+		builderMock := NewBuilderMock(mc)
+		builderMock.BuildMock.Set(func(_ context.Context, r io.Reader, w io.Writer) (err error) {
+			return fmt.Errorf("some error")
+		})
+		server := NewXlsxHandler(builderMock)
 
-		requestBody := strings.NewReader("{}")
-		request, _ := http.NewRequest(http.MethodPost, "/invoice/", requestBody)
-		response := httptest.NewRecorder()
-
-		handleFunc(response, request)
-
-		AssertStatusCode(t, response, http.StatusInternalServerError)
-		AssertBody(t, response, "internal server error\n")
+		require.HTTPStatusCode(t, server.handlerFn(), http.MethodPost, "/v2", nil, http.StatusInternalServerError)
+		require.HTTPBodyContains(t, server.handlerFn(), http.MethodPost, "/v2", nil, "some error")
 	})
 }
 
 func assertHeaders(t *testing.T, response *httptest.ResponseRecorder) {
-	AssertHeader(t, response, "Content-Disposition", "attachment; filename=sheet.xlsx")
-	AssertHeader(t, response, "Content-Type", "application/octet-stream")
-	//AssertHeader(t, response, "Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	AssertHeader(t, response, "Content-Transfer-Encoding", "binary")
-	AssertHeader(t, response, "Expires", "0")
-	AssertHeader(t, response, "Content-Length", "18")
+	assertHeader(t, response, "Content-Disposition", "attachment; filename=sheet.xlsx")
+	assertHeader(t, response, "Content-Type", "application/octet-stream")
+	assertHeader(t, response, "Content-Transfer-Encoding", "binary")
+	assertHeader(t, response, "Expires", "0")
+}
+
+func assertHeader(t *testing.T, w *httptest.ResponseRecorder, header string, value string) {
+	t.Helper()
+
+	assert.Equal(t, value, w.Result().Header.Get(header))
 }

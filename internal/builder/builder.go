@@ -1,48 +1,83 @@
 package builder
 
 import (
-	"bytes"
-	"log"
+	"context"
+	"io"
+	"log/slog"
 
+	"github.com/etilite/xlsx-builder/internal/model"
 	"github.com/xuri/excelize/v2"
 )
 
-type Builder struct{}
+const sheetName = "Sheet1"
 
-func NewBuilder() *Builder {
-	return &Builder{}
+type decoder[T any] interface {
+	DecodeAndProcess(ctx context.Context, r io.Reader, process func(ctx context.Context, elem T) error) error
 }
 
-func (b *Builder) Build(rows [][]any) (*bytes.Buffer, error) {
+type processFn[T any] func(ctx context.Context, elem T) error
+
+type Builder struct {
+	decoder   decoder[model.Row]
+	processor func(sw *excelize.StreamWriter) processFn[model.Row]
+}
+
+func NewBuilder() *Builder {
+	return &Builder{
+		decoder:   NewDecoder[model.Row](),
+		processor: processStreamWrite,
+	}
+}
+
+func (b *Builder) Build(ctx context.Context, r io.Reader, w io.Writer) error {
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {
-			log.Print(err)
+			slog.Error("builder: failed to close file", "error", err)
 		}
 	}()
-	err := fillRows(rows, f)
-	if err != nil {
-		return nil, err
+
+	if err := b.streamWriteRows(ctx, r, f); err != nil {
+		return err
 	}
 
-	buf, err := f.WriteToBuffer()
-	if err != nil {
-		return nil, err
+	if err := f.Write(w); err != nil {
+		return err
 	}
 
-	return buf, nil
+	return nil
 }
 
-func fillRows(rows [][]any, f *excelize.File) error {
-	for i, r := range rows {
-		cell, err := excelize.CoordinatesToCellName(1, i+1)
-		if err != nil {
-			return err
-		}
-		err = f.SetSheetRow("Sheet1", cell, &r)
-		if err != nil {
-			return err
-		}
+func (b *Builder) streamWriteRows(ctx context.Context, r io.Reader, f *excelize.File) error {
+	sw, err := f.NewStreamWriter(sheetName)
+	if err != nil {
+		return err
 	}
+
+	if err = b.decoder.DecodeAndProcess(ctx, r, b.processor(sw)); err != nil {
+		return err
+	}
+
+	if err = sw.Flush(); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func processStreamWrite(sw *excelize.StreamWriter) processFn[model.Row] {
+	row := 1
+	return func(_ context.Context, elem model.Row) error {
+		cell, err := excelize.CoordinatesToCellName(1, row)
+		if err != nil {
+			return err
+		}
+
+		if err = sw.SetRow(cell, elem.GetData()); err != nil {
+			return err
+		}
+		row++
+
+		return nil
+	}
 }

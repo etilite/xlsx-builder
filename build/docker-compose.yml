@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   xlsx-builder:
+    image: etilite/xlsx-builder:latest
     build:
       context: ./../
       dockerfile: ./build/Dockerfile
