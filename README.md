@@ -1,4 +1,8 @@
 # xlsx-builder
+[![docker pulls](https://img.shields.io/docker/pulls/etilite/xlsx-builder)](https://hub.docker.com/r/etilite/xlsx-builder)
+[![docker push](https://github.com/etilite/xlsx-builder/actions/workflows/docker.yml/badge.svg)](https://github.com/etilite/xlsx-builder/actions/workflows/docker.yml)
+[![go build](https://github.com/etilite/xlsx-builder/actions/workflows/go.yml/badge.svg)](https://github.com/etilite/xlsx-builder/actions/workflows/go.yml)
+[![codecov](https://codecov.io/gh/etilite/xlsx-builder/graph/badge.svg?token=PYVPKWSEP1)](https://codecov.io/gh/etilite/xlsx-builder)
 
 `xlsx-builder` is a lightweight microservice built with Go, designed to generate XLSX files from HTTP JSON requests.
 
@@ -29,10 +33,11 @@ The request body should be a JSON object with the following structure:
 
 ```json
 [
-   {"data": [1, "a", 2.1]},
-   {"data": [2, "some-cell-data", 2, "another-cell"]}
+   {"data": [11, "a", 2.1]},
+   {"data": [22, "some-cell-data", 2, "another-cell"]}
 ]
 ```
+Where each object in array presents a single row in table and `data` is array of cell values in this row.
 
 **Request Example:**
 
@@ -42,14 +47,20 @@ Using `cURL`, you can make a request like this:
 curl --location 'localhost:8080/api/build' \
 --header 'Content-Type: application/json' \
 --data '[
-    {"data": [1, "a", 2.1]},
-    {"data": [2, "some-cell-data", 2, "another-cell"]}
+    {"data": [11, "a", 2.1]},
+    {"data": [22, "some-cell-data", 2, "another-cell"]}
 ]' -o sheet.xlsx
 ```
 
 **Response:**
 
 The response will be a binary XLSX file with the generated content. 
+For this particular example it is a table with 2 rows and 4 cols:
+
+|    |                |     |              |
+|----|----------------|-----|--------------|
+| 11 | a              | 2.1 |              |
+| 22 | some-cell-data | 2   | another-cell |
 
 ### Build from source
 
@@ -67,10 +78,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contributing
 
 If you'd like to contribute to the project, please open an issue or submit a pull request on GitHub.
-
-## Badges
-
-[![docker pulls](https://img.shields.io/docker/pulls/etilite/xlsx-builder)](https://hub.docker.com/r/etilite/xlsx-builder)
-[![docker push](https://github.com/etilite/xlsx-builder/actions/workflows/docker.yml/badge.svg)](https://github.com/etilite/xlsx-builder/actions/workflows/docker.yml)
-[![go build](https://github.com/etilite/xlsx-builder/actions/workflows/go.yml/badge.svg)](https://github.com/etilite/xlsx-builder/actions/workflows/go.yml)
-[![codecov](https://codecov.io/gh/etilite/xlsx-builder/graph/badge.svg?token=PYVPKWSEP1)](https://codecov.io/gh/etilite/xlsx-builder)
