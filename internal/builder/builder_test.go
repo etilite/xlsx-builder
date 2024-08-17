@@ -60,6 +60,106 @@ func TestBuilder_Build(t *testing.T) {
 func TestBuilder_Build_errors(t *testing.T) {
 	t.Parallel()
 
+	t.Run("new stream writer error and close file error", func(t *testing.T) {
+		t.Parallel()
+
+		mc := minimock.NewController(t)
+		xlsxFileMock := NewXlsxFileMock(mc)
+		xlsxFileMock.NewStreamWriterMock.Expect(sheetName).Return(nil, fmt.Errorf("new stream writer error"))
+		xlsxFileMock.CloseMock.Expect().Return(fmt.Errorf("close file error"))
+
+		b := NewBuilder()
+		b.fileFactory = func() xlsxFile {
+			return xlsxFileMock
+		}
+
+		err := b.Build(context.Background(), nil, nil)
+
+		require.ErrorContains(t, err, "new stream writer error")
+	})
+
+	t.Run("coordinates to cell name error", func(t *testing.T) {
+		t.Parallel()
+
+		mc := minimock.NewController(t)
+		decoderMock := NewDecoderMock[model.Row](mc)
+		decoderMock.DecodeAndProcessMock.Set(
+			func(_ context.Context, _ io.Reader, p func(ctx context.Context, elem model.Row) error) error {
+				row := model.Row{}
+				return p(context.Background(), row)
+			},
+		)
+
+		b := NewBuilder()
+		b.decoder = decoderMock
+		b.startCol = -1
+
+		err := b.Build(context.Background(), nil, nil)
+
+		require.ErrorContains(t, err, "invalid cell reference [-1, 1]")
+	})
+
+	t.Run("set row error", func(t *testing.T) {
+		t.Parallel()
+
+		mc := minimock.NewController(t)
+		streamWriterMock := NewStreamWriterMock(mc)
+		streamWriterMock.SetRowMock.Expect("A1", nil).Return(fmt.Errorf("set row error"))
+		xlsxFileMock := NewXlsxFileMock(mc)
+		xlsxFileMock.CloseMock.Expect().Return(nil)
+		decoderMock := NewDecoderMock[model.Row](mc)
+		decoderMock.DecodeAndProcessMock.Set(
+			func(_ context.Context, _ io.Reader, p func(ctx context.Context, elem model.Row) error) error {
+				row := model.Row{}
+				return p(context.Background(), row)
+			},
+		)
+
+		b := NewBuilder()
+		b.fileFactory = func() xlsxFile {
+			return xlsxFileMock
+		}
+		b.streamWriterFactory = func(_ xlsxFile) (streamWriter, error) {
+			return streamWriterMock, nil
+		}
+		b.decoder = decoderMock
+
+		err := b.Build(context.Background(), nil, nil)
+
+		require.ErrorContains(t, err, "set row error")
+	})
+
+	t.Run("flush error", func(t *testing.T) {
+		t.Parallel()
+
+		mc := minimock.NewController(t)
+		streamWriterMock := NewStreamWriterMock(mc)
+		streamWriterMock.SetRowMock.Expect("A1", nil).Return(nil)
+		streamWriterMock.FlushMock.Expect().Return(fmt.Errorf("flush error"))
+		xlsxFileMock := NewXlsxFileMock(mc)
+		xlsxFileMock.CloseMock.Expect().Return(nil)
+		decoderMock := NewDecoderMock[model.Row](mc)
+		decoderMock.DecodeAndProcessMock.Set(
+			func(_ context.Context, _ io.Reader, p func(ctx context.Context, elem model.Row) error) error {
+				row := model.Row{}
+				return p(context.Background(), row)
+			},
+		)
+
+		b := NewBuilder()
+		b.fileFactory = func() xlsxFile {
+			return xlsxFileMock
+		}
+		b.streamWriterFactory = func(_ xlsxFile) (streamWriter, error) {
+			return streamWriterMock, nil
+		}
+		b.decoder = decoderMock
+
+		err := b.Build(context.Background(), nil, nil)
+
+		require.ErrorContains(t, err, "flush error")
+	})
+
 	t.Run("decode and process error", func(t *testing.T) {
 		t.Parallel()
 
