@@ -4,7 +4,10 @@
 [![go build](https://github.com/etilite/xlsx-builder/actions/workflows/go.yml/badge.svg)](https://github.com/etilite/xlsx-builder/actions/workflows/go.yml)
 [![codecov](https://codecov.io/gh/etilite/xlsx-builder/graph/badge.svg?token=PYVPKWSEP1)](https://codecov.io/gh/etilite/xlsx-builder)
 
-`xlsx-builder` is a lightweight microservice built with Go, designed to generate XLSX files from HTTP JSON requests.
+`xlsx-builder` is a lightweight microservice written in Go that allows you to easily generate XLSX spreadsheets from JSON requests.
+This dedicated solution is perfect for projects looking to isolate their spreadsheet generation logic.
+For applications that handle large datasets, xlsx-builder leverages Go's impressive performance and memory efficiency.
+This makes it an optimal choice for enhancing scalability and maintainability while offloading labor-intensive tasks.
 
 ## Features
 
@@ -23,8 +26,7 @@ This will start the service and expose its API on port 8080.
 
 ### API
 
-**Endpoint:**
-
+#### Request
 - `POST /api/build`
 
 **Request Body:**
@@ -52,7 +54,7 @@ curl --location 'localhost:8080/api/build' \
 ]' -o sheet.xlsx
 ```
 
-**Response:**
+#### Response
 
 The response will be a binary XLSX file with the generated content. 
 For this particular example it is a table with 2 rows and 4 cols:
@@ -65,7 +67,7 @@ For this particular example it is a table with 2 rows and 4 cols:
 ### Build from source
 
 ```sh
-git clone https://github.com/your-repo/xlsx-builder.git
+git clone https://github.com/etilite/xlsx-builder.git
 cd xlsx-builder
 make run
 ```
