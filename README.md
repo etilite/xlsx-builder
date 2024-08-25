@@ -6,7 +6,7 @@
 
 `xlsx-builder` is a lightweight microservice written in Go that allows you to easily generate XLSX spreadsheets from JSON requests.
 
-This dedicated solution is perfect for projects looking to isolate their spreadsheet generation logic.
+It can be perfect dedicated solution for projects looking to isolate their spreadsheet generation logic.
 
 This microservice leverages Go's impressive performance and memory efficiency which can be useful for applications that handle large datasets .
 
