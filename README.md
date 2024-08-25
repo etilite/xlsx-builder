@@ -5,9 +5,10 @@
 [![codecov](https://codecov.io/gh/etilite/xlsx-builder/graph/badge.svg?token=PYVPKWSEP1)](https://codecov.io/gh/etilite/xlsx-builder)
 
 `xlsx-builder` is a lightweight microservice written in Go that allows you to easily generate XLSX spreadsheets from JSON requests.
+
 This dedicated solution is perfect for projects looking to isolate their spreadsheet generation logic.
-For applications that handle large datasets, xlsx-builder leverages Go's impressive performance and memory efficiency.
-This makes it an optimal choice for enhancing scalability and maintainability while offloading labor-intensive tasks.
+
+This microservice leverages Go's impressive performance and memory efficiency which can be useful for applications that handle large datasets .
 
 ## Features
 
