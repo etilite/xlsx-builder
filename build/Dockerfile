@@ -1,4 +1,4 @@
-ARG GO_VERSION=1.23.4
+ARG GO_VERSION=1.23.8
 ARG DISTROLESS_IMAGE=gcr.io/distroless/static:nonroot
 ############################
 # STEP 1 build executable binary
